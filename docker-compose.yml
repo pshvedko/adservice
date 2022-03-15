@@ -1,0 +1,22 @@
+version: "3.3"
+services:
+  node1:
+    image: ad-service-demo
+    build: .
+    depends_on:
+      - mongo
+  node2:
+    image: ad-service-demo
+    depends_on:
+      - node1
+  mongo:
+    image: mongo
+  nginx:
+    image: nginx
+    ports:
+      - 8080:8080
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - node1
+      - node2

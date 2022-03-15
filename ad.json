@@ -1,0 +1,10 @@
+{
+  "price": 1.234,
+  "subject": "Заголовок",
+  "description": "Содержание",
+  "photo": [
+    "https://localhost/1.png",
+    "https://localhost/2.png",
+    "https://localhost/3.png"
+  ]
+}
