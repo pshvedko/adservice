@@ -40,14 +40,14 @@ func (q *AddQuery) validate() error {
 
 func (a *Api) Add(w http.ResponseWriter, r *http.Request) {
 	var q AddQuery
-	if err := a.parseForm(r); err != nil {
-		a.writeError(w, http.StatusInternalServerError, err)
-	} else if err := a.decodeForm(&q, r); err != nil {
-		a.writeError(w, http.StatusBadRequest, err)
+	if err := parseForm(r); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+	} else if err := decodeForm(&q, r); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 	} else if v, err := a.Service.Create(q.Price, q.Subject, q.Description, q.Photo); err != nil {
-		a.writeError(w, http.StatusNotAcceptable, err)
+		writeError(w, http.StatusNotAcceptable, err)
 	} else {
-		a.writeJson(w, http.StatusCreated, v)
+		writeJson(w, http.StatusCreated, v)
 	}
 }
 
@@ -64,14 +64,14 @@ func (q *ListQuery) validate() error {
 
 func (a *Api) List(w http.ResponseWriter, r *http.Request) {
 	var q ListQuery
-	if err := a.parseForm(r); err != nil {
-		a.writeError(w, http.StatusInternalServerError, err)
-	} else if err := a.decodeForm(&q, r); err != nil {
-		a.writeError(w, http.StatusBadRequest, err)
+	if err := parseForm(r); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+	} else if err := decodeForm(&q, r); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 	} else if v, err := a.Service.Read(nil, nil, q.Limit, q.Offset, q.Sort); err != nil {
-		a.writeError(w, http.StatusNotFound, err)
+		writeError(w, http.StatusNotFound, err)
 	} else {
-		a.writeJson(w, http.StatusOK, v)
+		writeJson(w, http.StatusOK, v)
 	}
 }
 
@@ -87,18 +87,18 @@ func (q *GetQuery) validate() error {
 
 func (a *Api) Get(w http.ResponseWriter, r *http.Request) {
 	var q GetQuery
-	if err := a.parseForm(r); err != nil {
-		a.writeError(w, http.StatusInternalServerError, err)
-	} else if err := a.decodeForm(&q, r); err != nil {
-		a.writeError(w, http.StatusBadRequest, err)
+	if err := parseForm(r); err != nil {
+		writeError(w, http.StatusInternalServerError, err)
+	} else if err := decodeForm(&q, r); err != nil {
+		writeError(w, http.StatusBadRequest, err)
 	} else if v, err := a.Service.Read(q.Id, q.Field, 0, 0, nil); err != nil {
-		a.writeError(w, http.StatusNotFound, err)
+		writeError(w, http.StatusNotFound, err)
 	} else {
-		a.writeJson(w, http.StatusOK, reflect.ValueOf(v).Index(0).Interface())
+		writeJson(w, http.StatusOK, reflect.ValueOf(v).Index(0).Interface())
 	}
 }
 
-func (a *Api) parseForm(r *http.Request) (err error) {
+func parseForm(r *http.Request) (err error) {
 	switch strings.Split(r.Header.Get("Content-Type"), "; ")[0] {
 	case "multipart/form-data":
 		err = r.ParseMultipartForm(1 << 20)
@@ -122,7 +122,7 @@ type validator interface {
 	validate() error
 }
 
-func (a *Api) decodeForm(v validator, r *http.Request) (err error) {
+func decodeForm(v validator, r *http.Request) (err error) {
 	switch strings.Split(r.Header.Get("Content-Type"), "; ")[0] {
 	case "application/json":
 		err = json.NewDecoder(r.Body).Decode(v)
@@ -135,14 +135,14 @@ func (a *Api) decodeForm(v validator, r *http.Request) (err error) {
 	return
 }
 
-func (a *Api) writeError(w http.ResponseWriter, status int, err error) {
+func writeError(w http.ResponseWriter, status int, err error) {
 	w.WriteHeader(status)
 	if err != nil {
 		_, _ = fmt.Fprintln(w, strings.ToLower(err.Error()))
 	}
 }
 
-func (a *Api) writeJson(w http.ResponseWriter, status int, obj interface{}) {
+func writeJson(w http.ResponseWriter, status int, obj interface{}) {
 	w.Header().Add("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(status)
 	if obj != nil {
